@@ -1,7 +1,7 @@
 rm(list=ls())
-
 library(gtools)
 
+source("./GoldCode.R")
 
 # Definiranje kodova modulacije
 code1 = c(1,0,1,0,1,0)

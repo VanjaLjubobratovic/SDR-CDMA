@@ -38,7 +38,6 @@ generate_gold_code <- function(seed){
         if(is.na(in_r2)) {
           in_r2 <- r2[j]
         } else {
-          print(in_r2)
           in_r2 <- int_xor(in_r2, r2[j])
         }
       }
