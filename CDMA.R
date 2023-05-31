@@ -1,16 +1,27 @@
 rm(list=ls())
-library(gtools)
 
+library(gtools)
 source("./GoldCode.R")
+codes <- generate_n_codes(c(25, 26, 27))
 
 # Definiranje kodova modulacije
-codes <- generate_n_codes(c(25, 26, 27))
-print(codes)
+len = 20
 
 # učitavanje potrebnih poruka
-data1 = asc(readLines(file("text0.txt", "r"))[1])
-data2 = asc(readLines(file("text1.txt", "r"))[1])
-data3 = asc(readLines(file("text2.txt", "r"))[1])
+data = list(asc(readLines(file("text0.txt", "r"))[1]),asc(readLines(file("text1.txt", "r"))[1])
+            ,asc(readLines(file("text2.txt", "r"))[1]))
+
+# Pronalazak najduže poruke i postavljanje svih poruka na tu dužinu  
+maxLen = 0
+for(d in data){
+  if(length(d) > maxLen){
+    maxLen = length(d)
+  }
+}
+
+for(i in 1:length(data)){
+  length(data[[i]]) = maxLen
+}
 
 
 ascii_to_binary = function(msg) {
@@ -20,23 +31,13 @@ ascii_to_binary = function(msg) {
 }
 
 # Pretvaranje podataka iz ASCII u binarni
-stream1 = ascii_to_binary(data1)
-stream2 = ascii_to_binary(data2)
-stream3 = ascii_to_binary(data3)
 
-
-# Pronalazak najduže poruke kako bi se razlika duljine mogla popuniti
-maxLen = max(length(stream1), length(stream2), length(stream3))
-
-# Popunjavanje razlika u duljini s nulama
-length(stream1) = maxLen
-stream1[is.na(stream1)] = "00000000"
-
-length(stream2) = maxLen
-stream2[is.na(stream2)] = "00000000"
-
-length(stream3) = maxLen
-stream3[is.na(stream3)] = "00000000"
+stream <- list()
+k = 1
+for(d in data){
+  stream[[k]] <- ascii_to_binary(d)
+  k = k + 1
+}
 
 # Funkcija za modulacija poruka
 code_message = function(stream, code) {
@@ -58,23 +59,29 @@ code_message = function(stream, code) {
 }
 
 # Moduliranje poruka
-coded1 = code_message(stream1, code1)
-coded2 = code_message(stream2, code2)
-coded3 = code_message(stream3, code3)
+coded = list()
+k = 1
+for(s in stream){
+  coded[[k]] = code_message(s, codes[[k]])
+  k = k + 1
+}
 
 # Funkcija za kompoziciju signala
-composite_signal = function(coded1, coded2, coded3) {
-  composite = coded1 + coded2 + coded3
+composite_signal = function(coded) {
+  composite = 0
+  for(c in coded){
+    composite = composite + c
+  }
   return(composite)
 }
 
-composite = composite_signal(coded1, coded2, coded3)
+composite = composite_signal(coded)
 
 # Funkcija za demodulaciju
 decode = function(code, composite) {
   message = c()
-  for(i in seq(1, length(composite), 6)) {
-    code_vect = composite[i:(i+5)]
+  for(i in seq(1, length(composite), len)) {
+    code_vect = composite[i:(i+len-1)]
     code_vect = code_vect * code
     code_sum = sum(code_vect)
     
@@ -85,9 +92,12 @@ decode = function(code, composite) {
 }
 
 # Demodulacija poruka
-message1 = decode(code1, composite)
-message2 = decode(code2, composite)
-message3 = decode(code3, composite)
+messages = list()
+k = 1
+for(c in codes){
+  messages[[k]] = decode(c, composite)
+  k = k +1
+}
 
 # Funkcija za pretvorbu binarnog koda u poruke
 convert_to_string = function(message) {
@@ -104,6 +114,6 @@ convert_to_string = function(message) {
 }
 
 # Prikaz demoduliranih poruka
-print(convert_to_string(message1))
-print(convert_to_string(message2))
-print(convert_to_string(message3))
+for(m in messages){
+  print(convert_to_string(m))
+}
