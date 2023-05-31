@@ -54,4 +54,20 @@ generate_gold_code <- function(seed){
   return (gold_code)
 }
 
+generate_n_codes <- function(seeds) {
+  codes <- list()
+  for(i in 1:length(seeds)) {
+    # Turn int to binary array
+    seed_bin <- integer(7);
+    seed_bin[1:7] <- as.integer(intToBits(seeds[i]))[1:7]
+    
+    codes[[i]] <- generate_gold_code(seed_bin)
+  }
+  
+  return (codes)
+}
+
+
+codes <- generate_n_codes(c(25, 26, 27))
+print(codes)
 

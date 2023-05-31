@@ -4,9 +4,8 @@ library(gtools)
 source("./GoldCode.R")
 
 # Definiranje kodova modulacije
-code1 = c(1,0,1,0,1,0)
-code2 = c(0,1,1,1,0,1)
-code3 = c(1,1,1,0,0,0)
+codes <- generate_n_codes(c(25, 26, 27))
+print(codes)
 
 # učitavanje potrebnih poruka
 data1 = asc(readLines(file("text0.txt", "r"))[1])
