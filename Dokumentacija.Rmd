@@ -10,10 +10,12 @@ output: html_document
 ## Podjela zadataka u nekoliko koraka
 
 ## Goldov kod i skripta
+Vanja
 
 ## Code division multiple access
 
 ## CDMA algoritam i R skripta
+Graf
 
 ## Rezultati
 
