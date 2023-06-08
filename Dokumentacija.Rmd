@@ -1,0 +1,24 @@
+---
+title: "SDR seminar, Grupa 8"
+author: "Vanja Ljubobratović"
+date: "2023-06-08"
+output: html_document
+---
+
+## Definicija zadatka
+
+## Podjela zadataka u nekoliko koraka
+
+## Goldov kod i skripta
+
+## Code division multiple access
+
+## CDMA algoritam i R skripta
+
+## Rezultati
+
+## Finalni komentari i zaključak
+
+```{r}
+
+```
