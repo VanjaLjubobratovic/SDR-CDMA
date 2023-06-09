@@ -54,6 +54,8 @@ generate_gold_code <- function(seed){
   return (gold_code)
 }
 
+# Generates n sequences depending on the number
+# of seeds given in argument
 generate_n_codes <- function(seeds) {
   codes <- list()
   for(i in 1:length(seeds)) {
