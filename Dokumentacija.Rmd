@@ -10,11 +10,119 @@ output: html_document
 ## Podjela zadataka u nekoliko koraka
 
 ## Goldov kod i skripta
-Vanja
+Goldov kod je vrsta ortogonalnog koda koji se zbog svojih svojstava često koristi u telekomunikacijama (CDMA)
+i satelitskoj navigaciji.
+Svojstvo ortogonalnosti koda omogućava generaciju kodnih sekvenci koje imaju minimalnu količinu međusobnog
+utjecaja što omogućuje vrlo lako razlikovanje dvije kodne sekvence u okruženjima s velikom bukom
+ili interferencijama gdje može lako doći do izobličenja signala i grešaka.
+Navedena svojstva čine ovakve kodove savršenima za primjenu u CDMA metodi 
+gdje više korisnika dijeli komunikacijski kanal.
+
+Generacija jedne kodne sekvence Goldovog koda se izvodi pomoću 2 posmačna registra s linearnom povratnom vezom
+kao što je prikazano na slici ispod. Kako bi se generirao sljedeći bit Goldove sekvence, vrši se posmak registara
+te XOR operacija na izlaznim bitovima.
+Povratna veza služi kako bi se dobili novi ulazni bitovi u registre te se realizira XOR operacijom između
+bistabila na određenim pozicijama za svaki registar.
+
+![](./Images/goldHardware.png)
+
+S obzirom na odabir bistabila iz čijih izlaza se generira novi ulazni bit, postoje brojne Goldove sekvence
+od kojih nemaju sve jednako dobra svojstva korelacije.
+Stoga je potrebno naći takozvane preferirane parove što su konfiguracije koje provjereno daju najbolja
+korelacijska svojstva. Preferirani parovi za pojedine dužine posmačnih registara prikazani su u tablici ispod.
+
+![](./Images/preferredPairs.png)
+
+Za ovaj rad korišteni su posmačni registri dužine 7 bitova. Dovoljno bi bilo koristiti registre od 5 bitova budući da je potrebno
+generirati Goldove sekvence dužine 20 bitova, no većina primjera u izvorima je koristila 7 bitova te je tako bilo lakše
+implementirati algoritam prateći primjere te provjeriti njegovu valjanost.
+Također, svakom registru je prije generacije potrebno postaviti početnu vrijednost različitu od 0. Ta vrijednost se još naziva i "seed".
+Implementacija u ovom radu za prvi registar uvijek koristi seed 0000001 kao što navodi izvor, dok je za drugi registar seed 
+proizvoljno definiran prilikom pozivanja funkcije.
+
+### Implementacija algoritma 
+```{r}
+int_xor <- function(bit1, bit2) {
+  return (abs(bit1 - bit2))
+}
+
+generate_gold_code <- function(seed){
+  # Generates codes up to 127 bits
+  g1 <- c(1, 1, 1, 0, 0, 0, 1)
+  g2 <- c(0, 0, 1, 0, 0, 0, 1)
+  last <- length(g1)
+  
+  # Bit number 1 is left, bit number 7 is right
+  r1 <- c(0, 0, 0, 0, 0, 0, 1)
+  r2 <- seed
+  
+  gold_code <- c()
+  
+  for(i in 1:20) {
+    # Compute XOR of last bits in shift registers and output it
+    output_bit <- int_xor(r1[last], r2[last])
+    
+    in_r1 = NA
+    in_r2 = NA
+    
+    # Calculate new input bits via prefered pairs
+    for(j in seq(last, 1, -1)) {
+      if(g1[j] == 1) {
+        if(is.na(in_r1)) {
+          in_r1 <- r1[j]
+        } else {
+          in_r1 <- int_xor(in_r1, r1[j])
+        }
+      }
+      
+      if(g2[j] == 1) {
+        if(is.na(in_r2)) {
+          in_r2 <- r2[j]
+        } else {
+          in_r2 <- int_xor(in_r2, r2[j])
+        }
+      }
+    }
+    
+    # Shift registers
+    r1 <- c(in_r1, r1[1:last-1])
+    r2 <- c(in_r2, r2[1:last-1])
+    
+    # Store new output
+    gold_code <- c(gold_code, output_bit)
+  }
+  
+  return (gold_code)
+}
+```
+
+### Funkcija za generaciju n sekvenci i test
+```{r}
+# Generates n sequences depending on the number
+# of seeds given in argument
+generate_n_codes <- function(seeds) {
+  codes <- list()
+  for(i in 1:length(seeds)) {
+    # Turn int to binary array
+    seed_bin <- integer(7);
+    seed_bin[1:7] <- as.integer(intToBits(seeds[i]))[1:7]
+    
+    codes[[i]] <- generate_gold_code(seed_bin)
+  }
+  
+  return (codes)
+}
+
+# Test generating 3 sequences with given seeds
+codes <- generate_n_codes(c(25, 26, 27))
+print(codes)
+```
+
 
 ## Code division multiple access
 
 ## CDMA algoritam i R skripta
+
 Implementacija CDMA algoritma unutar razvojnog okruženja R zahtjeva nekoliko jednostavnih koraka:
 1. Generiranje n Goldovih kodova za prijenos n poruka
 2. Učitavanje zadanih poruka koje se prenose komunikacijskim kanalom.
@@ -183,6 +291,3 @@ print(convert_to_string(fakeMessage))
 
 ## Finalni komentari i zaključak
 
-```{r}
-
-```
