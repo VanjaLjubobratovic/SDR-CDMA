@@ -15,7 +15,169 @@ Vanja
 ## Code division multiple access
 
 ## CDMA algoritam i R skripta
-Graf
+Implementacija CDMA algoritma unutar razvojnog okruženja R zahtjeva nekoliko jednostavnih koraka:
+1. Generiranje n Goldovih kodova za prijenos n poruka
+2. Učitavanje zadanih poruka koje se prenose komunikacijskim kanalom.
+3. Pretvorba tih poruka u binarni oblik.
+4. Kodiranje binarnih poruka s generiranim Gold kodovima
+5. Kreiranje kompozitnog signala zbrajanjem poruka.
+6. Dekodiranje dobivenog kompozitnog signala s odgovarajućim Goldovim kodovima.
+7. Pretvorba poruke u ASCII format i ispis
+
+### Generiranje Goldovih kodova
+U ovome zadatku šalju se tri različite poruke što znači da je potrebno generirati 3 različita Gold koda. Generacija kodova se radi uz pomoć već objašnjene skripte. Skriptu je potrebno dodati u izvore uz pomoć naredbe source(). Nakon toga generiraju se tri koda s seedovima 25,26 i 27 te se spremaju u vektor. Kao što je već navedeno zbog jednostavnosti kodovi se sastoje od nula i jedinica, pa se nule kasnije pretvaraju u -1.
+
+```{r}
+source("./GoldCode.R")
+codes <- generate_n_codes(c(25, 26, 27))
+```
+
+### Učitavanje poruka
+Poruke su spremljene u tri različite tekstualne datoteke koje se učitavaju naredbom readLines u varijablu data. Jer su poruke različitih dužina, a kompozitni signal se dobiva zbrajanjem tih triju poruka, sve tri poruke su postavljene na istu dužinu tako da se kraće poruke nadopunilo s praznim vrijednostima NA.
+
+```{r}
+data = list(asc(readLines(file("text0.txt", "r"))[1]),asc(readLines(file("text1.txt", "r"))[1])
+            ,asc(readLines(file("text2.txt", "r"))[1]))
+
+# Pronalazak najduže poruke i postavljanje svih poruka na tu dužinu  
+maxLen = 0
+for(d in data){
+  if(length(d) > maxLen){
+    maxLen = length(d)
+  }
+}
+for(i in 1:length(data)){
+  length(data[[i]]) = maxLen
+}
+```
+
+### Pretvorba poruka u binarni oblik
+Kako bi se poruke mogle kodirati potrebno ih je prvo pretvoriti u binarni oblik. Zbog toga je definirana funkcija ascii_to_binary koja uz pomoć naredbe intToBits() pretvara ASCII znakove u odgovarajuće binarne vrijednosti. Definirana funkcija se onda poziva nad svakoj od triju poruka te se rezultati spremaju u varijablu stream.   
+
+```{r}
+ascii_to_binary = function(msg) {
+  # Konvertiranje ASCII vrijednosti u binarne vrijednosti
+  binary = sapply(msg, function(x) {paste0(rev(as.integer(intToBits(x)[1:8])), collapse = "")})
+  return(binary)
+}
+
+stream <- list()
+k = 1
+for(d in data){
+  stream[[k]] <- ascii_to_binary(d)
+  k = k + 1
+}
+```
+
+### Kodiranje binarnih poruka
+Dobivene binarne poruke je potrebno kodirati odgovarajućim gold kodom. Za taj postupak definirana je funkcija code_message koja kao argumente prima poruku i kod. Kodirana poruka se dobiva tako da se prolazi kroz svaki bit poruke te se u slučaju jedinice taj bit zamjeni kodom, a u slučaju nule on se zamjeni s istim kodom, ali obrnutim predznacima. Kao što je već spomenuto kodovi se sastoje od nula i jedinica što nije ispravno s obzirom da se kodirane poruke zbrajaju. Zbog toga su na kraju funkcije nule zamijenjene s -1, te je prvih 30 znakova prve poruke ispisano kako bi se mogao vidjeti rezultat. Definirana funkcija se poziva nad sve 3 binarne poruke, te svaka poruka koristi svoj posebni gold kod.   
+
+```{r}
+code_message = function(stream, code) {
+  coded_msg = c()
+  code_neg = ifelse(code == 0, 1, ifelse(code == 1, 0, code))
+  for(i in 1:length(stream)) {
+    symbol = strsplit(stream[i], "")[[1]]
+    for(j in 1:length(symbol)) {
+      if(symbol[j] == "1"){
+        coded_msg = c(coded_msg, code)
+      } else {
+        coded_msg = c(coded_msg, code_neg)
+      }
+    }
+  }
+  
+  coded_msg = ifelse(coded_msg == 0, -1, 1)
+  return(coded_msg)
+}
+
+# Moduliranje poruka
+coded = list()
+k = 1
+for(s in stream){
+  coded[[k]] = code_message(s, codes[[k]])
+  k = k + 1
+}
+#Ispis dijela kodirane poruke za prikaz izgleda
+coded[[1]][1:30]
+
+```
+
+### Računanje kompozitnog signala
+
+Kompozitni signal se vrlo jednostavno računa zbrajanjem svih triju poruka. Kao rezultat više nemamo tri poruke nego samo jednu iz koje će se kasnije originalne poruke pročitati dekodiranjem. Kao i u funkciji iznad ispisuje se prvih 30 znakova kompozitnog signala kako bi se provjerio rezultat.
+
+```{r}
+composite_signal = function(coded) {
+  composite = 0
+  for(c in coded){
+    composite = composite + c
+  }
+  return(composite)
+}
+
+composite = composite_signal(coded)
+#Ispis kompozitne poruke za prikaz izgleda
+composite[1:30]
+```
+
+### Dekodiranje kompozitnog signala
+Kako bi se iz kompozitnog signala izračunale originalne poruke potrebno je signal dekodirati s odgovarajućim kodovima. U tu svrhu definirana je funkcija decode u kojoj se signal razdvaja na dijelove jednake dužine koda, u ovome slučaju 20, te se ti dobiveni dijelovi množe s odgovarajućim kodom. Rezultati unutar svakog od tih dijelova se zbrajaju te se u slučaju rezultata većeg od nule zapisjue jedinica, a u slučaju manjem od nule zapisuje se nula. Tim procesom se dobiva originalna poruka u binarnome obliku. Navedena funkcija se poziva nad kompozitnim signalom četiri puta. Tri puta s originalno definiranim kodovima kako bi se dobile originalne poruke i jednom s novo generiranim kodom kako bi se dokazalo da se mora koristit isti kod za kodiranje i dekodiranje. 
+```{r}
+# Funkcija za demodulaciju
+decode = function(code, composite) {
+  message = c()
+  for(i in seq(1, length(composite), len)) {
+    code_vect = composite[i:(i+len-1)]
+    code_vect = code_vect * code
+    code_sum = sum(code_vect)
+    
+    message = c(message, ifelse(code_sum < 0, 0, 1))
+  }
+  
+  return(message)
+}
+
+# Demodulacija poruka
+messages = list()
+k = 1
+for(c in codes){
+  messages[[k]] = decode(c, composite)
+  k = k +1
+}
+
+#Definiranje novog koda kako bi se pokušala pročitati poruka
+fakeCode = generate_n_codes(10)
+fakeMessage = decode(fakeCode[[1]], composite)
+```
+
+### Pretvorba binarni poruka u ASCII te njihov ispis
+
+Dobivene poruke su zapisane u binarnome obliku te ih je potrebno pretvoriti u ASCII. Za to je definirana fukncija convert_to_string koja svakih 8 bitova poruke pretvara u ASCII znak funkcijom intToUtf8. Dobivene poruke se zatim ispisuju funkcijom print(). Prve tri poruke su jednake originalnima, dok je četvrta poruka koja je dobivena dekodiranjem kodom koji nije korišten u kodiranju, nečitljiva.
+
+```{r}
+# Funkcija za pretvorbu binarnog koda u poruke
+convert_to_string = function(message) {
+  ascii_str = ""
+  for(i in seq(1, length(message), 8)) {
+    binary_str = message[i:(i+7)]
+    binary_str = paste(binary_str, collapse="")
+    decimal = strtoi(binary_str, base=2)
+    
+    ascii_str = paste(ascii_str, intToUtf8(decimal), sep="")
+  }
+  
+  return(ascii_str)
+}
+
+# Prikaz demoduliranih poruka
+for(m in messages){
+  print(convert_to_string(m))
+}
+
+#Primjer dekodiranja poruke s "krivim" kodom
+print(convert_to_string(fakeMessage))
+```
 
 ## Rezultati
 

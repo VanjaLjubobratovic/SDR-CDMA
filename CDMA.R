@@ -1,6 +1,6 @@
 rm(list=ls())
 
-library(gtools)
+
 source("./GoldCode.R")
 codes <- generate_n_codes(c(25, 26, 27))
 
@@ -65,6 +65,8 @@ for(s in stream){
   coded[[k]] = code_message(s, codes[[k]])
   k = k + 1
 }
+#Ispis dijela kodirane poruke za prikaz izgleda
+coded[[1]][1:30]
 
 # Funkcija za kompoziciju signala
 composite_signal = function(coded) {
@@ -76,6 +78,8 @@ composite_signal = function(coded) {
 }
 
 composite = composite_signal(coded)
+#Ispis kompozitne poruke za prikaz izgleda
+composite[1:30]
 
 # Funkcija za demodulaciju
 decode = function(code, composite) {
@@ -99,6 +103,10 @@ for(c in codes){
   k = k +1
 }
 
+#Definiranje novog koda kako bi se pokušala pročitati poruka
+fakeCode = generate_n_codes(10)
+fakeMessage = decode(fakeCode[[1]], composite)
+
 # Funkcija za pretvorbu binarnog koda u poruke
 convert_to_string = function(message) {
   ascii_str = ""
@@ -117,3 +125,6 @@ convert_to_string = function(message) {
 for(m in messages){
   print(convert_to_string(m))
 }
+
+#Primjer dekodiranja poruke s "krivim" kodom
+print(convert_to_string(fakeMessage))
