@@ -6,8 +6,10 @@ output: html_document
 ---
 
 ## Definicija zadatka
+Zadatak ovog seminara je pokazati proces CDMA digitalne modulacije i demodulacije pomoću R-a. Potrebno je tri različite tekstualne poruke pretvoriti u ASCII znakove te nad njima izvršiti digitalnu modulaciju pomoću ortogonalnih kodova, gdje se svaki kod sastoji od minimalno 20 bitova. Na kraju je potrebno napraviti demodulaciju i sve poruke pretvoriti nazad u tekstualni oblik.
 
 ## Podjela zadataka u nekoliko koraka
+Prvi korak u rješavanju zadatka je generiranje kodova za kodiranje, te učitavanje i priprema podataka iz tekstualnih datoteka. Kodovi su generirani pomoću implementacije algoritma Gold-ovog koda. Zatim se ASCII format poruka kodira generiranim kodovima, te prosljeđuje funkciji kojom se vrši modulacija. Nakon modulacije se vrši demodulacija, kojom se iz kompozitne poruke dobivaju početne poruke. Kao zadnji korak u ovom seminaru, odlučili smo se pokazati što bi se desilo ako se modulariziranu poruku pokuša demodularizirati sa neodgovarajućim kodovima. Implementacija Gold-ovog koda i CDMA algoritma objašnjena je u nastavku dokumentacije.
 
 ## Goldov kod i skripta
 Goldov kod je vrsta ortogonalnog koda koji se zbog svojih svojstava često koristi u telekomunikacijama (CDMA)
