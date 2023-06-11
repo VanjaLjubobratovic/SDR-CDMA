@@ -123,6 +123,14 @@ print(codes)
 
 ## Code division multiple access
 
+CDMA (Code Division Multiple Access) je tehnologija koja se koristi u radio komunikacijama za prijenos podataka. Ova tehnologija omogućuje istovremeni prijenos različitih signala na istom frekvencijskom pojasu, koristeći jedinstvene načine kodiranja informacija kako bi se komunikacijski kanali razlikovali i identificirali.
+
+Za razliku od TDMA (Time Division Multiple Access) i FDMA (Frequency Division Multiple Access), koji koriste vremensku, odnosno frekvencijsku podjelu, CDMA se temelji na principu kodne podjele. Svaki korisnik koristi različite načine kodiranja svojih podataka. Kada se kodovi primijene na podatke, signali se miješaju i zajedno šalju na istom frekvencijskom pojasu. Prilikom prijema, prijemnik koristi isti kod kako bi izdvojio željeni signal od ostalih signala, koji se prenose istovremeno na tom frekvencijskom pojasu, te dekodirane podatke prenosi korisniku. 
+
+Prednosti CDMA tehnologije su veći kapacitet mreže, smanjena interferencija i veća sigurnost. CDMA se koristi u mnogim bežičnim komunikacijskim sustavima, uključujući mobilne mreže, bežične telefonske sustave, širokopojasne bežične pristupne mreže, kao i za satelitsku navigaciju.
+
+ 
+ 
 ## CDMA algoritam i R skripta
 
 Implementacija CDMA algoritma unutar razvojnog okruženja R zahtjeva nekoliko jednostavnih koraka:
