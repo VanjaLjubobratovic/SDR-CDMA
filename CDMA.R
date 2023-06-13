@@ -8,8 +8,9 @@ codes <- generate_n_codes(c(25, 26, 27))
 len = 20
 
 # učitavanje potrebnih poruka
-data = list(asc(readLines(file("text0.txt", "r"))[1]),asc(readLines(file("text1.txt", "r"))[1])
-            ,asc(readLines(file("text2.txt", "r"))[1]))
+data = list(asc(readLines(file("text0.txt", "r"))[1]),
+            asc(readLines(file("text1.txt", "r"))[1]),
+            asc(readLines(file("text2.txt", "r"))[1]))
 
 # Pronalazak najduže poruke i postavljanje svih poruka na tu dužinu  
 maxLen = 0

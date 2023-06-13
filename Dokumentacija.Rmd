@@ -1,17 +1,22 @@
 ---
 title: "SDR seminar, Grupa 8"
-author: "Vanja Ljubobratović"
+author: "Karlo Graf, Anamaria Vargić, Anđela Jaković, Vanja Ljubobratović"
 date: "2023-06-08"
 output: html_document
 ---
 
 ## Definicija zadatka
-Zadatak ovog seminara je pokazati proces CDMA digitalne modulacije i demodulacije pomoću R-a. Potrebno je tri različite tekstualne poruke pretvoriti u ASCII znakove te nad njima izvršiti digitalnu modulaciju pomoću ortogonalnih kodova, gdje se svaki kod sastoji od minimalno 20 bitova. Na kraju je potrebno napraviti demodulaciju i sve poruke pretvoriti nazad u tekstualni oblik.
+Zadatak ovog seminara je demonstrirati proces CDMA digitalne modulacije i demodulacije unutar R okruženja. Potrebno je tri  tekstualne poruke pretvoriti u ASCII znakove te nad njima izvršiti digitalnu modulaciju pomoću generiranih ortogonalnih kodova, gdje se svaki kod sastoji od minimalno 20 bitova. Na kraju je potrebno napraviti demodulaciju i sve poruke pretvoriti nazad u tekstualni oblik na strani svakog simuliranog primatelja.
 
 ## Podjela zadataka u nekoliko koraka
-Prvi korak u rješavanju zadatka je generiranje kodova za kodiranje, te učitavanje i priprema podataka iz tekstualnih datoteka. Kodovi su generirani pomoću implementacije algoritma Gold-ovog koda. Zatim se ASCII format poruka kodira generiranim kodovima, te prosljeđuje funkciji kojom se vrši modulacija. Nakon modulacije se vrši demodulacija, kojom se iz kompozitne poruke dobivaju početne poruke. Kao zadnji korak u ovom seminaru, odlučili smo se pokazati što bi se desilo ako se modulariziranu poruku pokuša demodularizirati sa neodgovarajućim kodovima. Implementacija Gold-ovog koda i CDMA algoritma objašnjena je u nastavku dokumentacije.
+1. Generiranje 3 kodne sekvence
+2. Učitavanje i priprema poruka
+3. Transformacija poruka u ASCII te u binarni format
+4. Digitalna modulacija 
+5. Digitalna demodulacija
+6. Rekonstrukcija poruka na strani primatelja
 
-## Goldov kod i skripta
+## 1. Goldov kod i R skripta
 Goldov kod je vrsta ortogonalnog koda koji se zbog svojih svojstava često koristi u telekomunikacijama (CDMA)
 i satelitskoj navigaciji.
 Svojstvo ortogonalnosti koda omogućava generaciju kodnih sekvenci koje imaju minimalnu količinu međusobnog
@@ -42,7 +47,7 @@ Također, svakom registru je prije generacije potrebno postaviti početnu vrijed
 Implementacija u ovom radu za prvi registar uvijek koristi seed 0000001 kao što navodi izvor, dok je za drugi registar seed 
 proizvoljno definiran prilikom pozivanja funkcije.
 
-### Implementacija algoritma 
+### 1.1 Implementacija algoritma 
 ```{r}
 int_xor <- function(bit1, bit2) {
   return (abs(bit1 - bit2))
@@ -98,7 +103,7 @@ generate_gold_code <- function(seed){
 }
 ```
 
-### Funkcija za generaciju n sekvenci i test
+### 1.2 Funkcija za generaciju n sekvenci i test
 ```{r}
 # Generates n sequences depending on the number
 # of seeds given in argument
@@ -121,7 +126,7 @@ print(codes)
 ```
 
 
-## Code division multiple access
+## 2. Code division multiple access
 
 CDMA (Code Division Multiple Access) je tehnologija koja se koristi u radio komunikacijama za prijenos podataka. Ova tehnologija omogućuje istovremeni prijenos različitih signala na istom frekvencijskom pojasu, koristeći jedinstvene načine kodiranja informacija kako bi se komunikacijski kanali razlikovali i identificirali.
 
@@ -131,7 +136,7 @@ Prednosti CDMA tehnologije su veći kapacitet mreže, smanjena interferencija i 
 
  
  
-## CDMA algoritam i R skripta
+## 3. CDMA algoritam i R skripta
 
 Implementacija CDMA algoritma unutar razvojnog okruženja R zahtjeva nekoliko jednostavnih koraka:
 1. Generiranje n Goldovih kodova za prijenos n poruka
@@ -142,7 +147,7 @@ Implementacija CDMA algoritma unutar razvojnog okruženja R zahtjeva nekoliko je
 6. Dekodiranje dobivenog kompozitnog signala s odgovarajućim Goldovim kodovima.
 7. Pretvorba poruke u ASCII format i ispis
 
-### Generiranje Goldovih kodova
+### 3.1 Generiranje Goldovih kodova
 U ovome zadatku šalju se tri različite poruke što znači da je potrebno generirati 3 različita Gold koda. Generacija kodova se radi uz pomoć već objašnjene skripte. Skriptu je potrebno dodati u izvore uz pomoć naredbe source(). Nakon toga generiraju se tri koda s seedovima 25,26 i 27 te se spremaju u vektor. Kao što je već navedeno zbog jednostavnosti kodovi se sastoje od nula i jedinica, pa se nule kasnije pretvaraju u -1.
 
 ```{r}
@@ -150,12 +155,16 @@ source("./GoldCode.R")
 codes <- generate_n_codes(c(25, 26, 27))
 ```
 
-### Učitavanje poruka
+### 3.2 Učitavanje poruka
 Poruke su spremljene u tri različite tekstualne datoteke koje se učitavaju naredbom readLines u varijablu data. Jer su poruke različitih dužina, a kompozitni signal se dobiva zbrajanjem tih triju poruka, sve tri poruke su postavljene na istu dužinu tako da se kraće poruke nadopunilo s praznim vrijednostima NA.
 
 ```{r}
-data = list(asc(readLines(file("text0.txt", "r"))[1]),asc(readLines(file("text1.txt", "r"))[1])
-            ,asc(readLines(file("text2.txt", "r"))[1]))
+library('gtools')
+len = 20
+
+data = list(asc(readLines(file("text0.txt", "r"))[1]),
+            asc(readLines(file("text1.txt", "r"))[1]),
+            asc(readLines(file("text2.txt", "r"))[1]))
 
 # Pronalazak najduže poruke i postavljanje svih poruka na tu dužinu  
 maxLen = 0
@@ -169,7 +178,7 @@ for(i in 1:length(data)){
 }
 ```
 
-### Pretvorba poruka u binarni oblik
+### 3.3 Pretvorba poruka u binarni oblik
 Kako bi se poruke mogle kodirati potrebno ih je prvo pretvoriti u binarni oblik. Zbog toga je definirana funkcija ascii_to_binary koja uz pomoć naredbe intToBits() pretvara ASCII znakove u odgovarajuće binarne vrijednosti. Definirana funkcija se onda poziva nad svakoj od triju poruka te se rezultati spremaju u varijablu stream.   
 
 ```{r}
@@ -187,7 +196,7 @@ for(d in data){
 }
 ```
 
-### Kodiranje binarnih poruka
+### 3.4 Kodiranje binarnih poruka
 Dobivene binarne poruke je potrebno kodirati odgovarajućim gold kodom. Za taj postupak definirana je funkcija code_message koja kao argumente prima poruku i kod. Kodirana poruka se dobiva tako da se prolazi kroz svaki bit poruke te se u slučaju jedinice taj bit zamjeni kodom, a u slučaju nule on se zamjeni s istim kodom, ali obrnutim predznacima. Kao što je već spomenuto kodovi se sastoje od nula i jedinica što nije ispravno s obzirom da se kodirane poruke zbrajaju. Zbog toga su na kraju funkcije nule zamijenjene s -1, te je prvih 30 znakova prve poruke ispisano kako bi se mogao vidjeti rezultat. Definirana funkcija se poziva nad sve 3 binarne poruke, te svaka poruka koristi svoj posebni gold kod.   
 
 ```{r}
@@ -221,7 +230,7 @@ coded[[1]][1:30]
 
 ```
 
-### Računanje kompozitnog signala
+### 3.5 Generiranje kompozitnog signala
 
 Kompozitni signal se vrlo jednostavno računa zbrajanjem svih triju poruka. Kao rezultat više nemamo tri poruke nego samo jednu iz koje će se kasnije originalne poruke pročitati dekodiranjem. Kao i u funkciji iznad ispisuje se prvih 30 znakova kompozitnog signala kako bi se provjerio rezultat.
 
@@ -239,7 +248,7 @@ composite = composite_signal(coded)
 composite[1:30]
 ```
 
-### Dekodiranje kompozitnog signala
+### 3.6 Dekodiranje kompozitnog signala
 Kako bi se iz kompozitnog signala izračunale originalne poruke potrebno je signal dekodirati s odgovarajućim kodovima. U tu svrhu definirana je funkcija decode u kojoj se signal razdvaja na dijelove jednake dužine koda, u ovome slučaju 20, te se ti dobiveni dijelovi množe s odgovarajućim kodom. Rezultati unutar svakog od tih dijelova se zbrajaju te se u slučaju rezultata većeg od nule zapisjue jedinica, a u slučaju manjem od nule zapisuje se nula. Tim procesom se dobiva originalna poruka u binarnome obliku. Navedena funkcija se poziva nad kompozitnim signalom četiri puta. Tri puta s originalno definiranim kodovima kako bi se dobile originalne poruke i jednom s novo generiranim kodom kako bi se dokazalo da se mora koristit isti kod za kodiranje i dekodiranje. 
 ```{r}
 # Funkcija za demodulaciju
@@ -269,9 +278,9 @@ fakeCode = generate_n_codes(10)
 fakeMessage = decode(fakeCode[[1]], composite)
 ```
 
-### Pretvorba binarni poruka u ASCII te njihov ispis
+### 3.7 Pretvorba binarnih poruka u ASCII te njihov ispis
 
-Dobivene poruke su zapisane u binarnome obliku te ih je potrebno pretvoriti u ASCII. Za to je definirana fukncija convert_to_string koja svakih 8 bitova poruke pretvara u ASCII znak funkcijom intToUtf8. Dobivene poruke se zatim ispisuju funkcijom print(). Prve tri poruke su jednake originalnima, dok je četvrta poruka koja je dobivena dekodiranjem kodom koji nije korišten u kodiranju, nečitljiva.
+Dobivene poruke su zapisane u binarnome obliku te ih je potrebno pretvoriti u ASCII. Za to je definirana fukncija convert_to_string koja svakih 8 bitova poruke pretvara u ASCII znak funkcijom intToUtf8. Dobivene poruke se zatim ispisuju funkcijom print(). Prve tri poruke su jednake originalnima, dok je četvrta poruka, koja je dobivena dekodiranjem kodom koji nije korišten u kodiranju, nečitljiva.
 
 ```{r}
 # Funkcija za pretvorbu binarnog koda u poruke
@@ -297,7 +306,17 @@ for(m in messages){
 print(convert_to_string(fakeMessage))
 ```
 
-## Rezultati
+## 4. Finalni komentari i zaključak
+U ovom radu ukratko je objašnjena CDMA (Code division multiple access) metoda za dijeljenje komunikacijskog kanala pomoću kodne modulacije,
+kako se ta metoda razlikuje od ostalih metoda dijeljenja komunikacijskog kanala te koje su njene prednosti.
+Ukratko je prikazan i algoritam za generiranje ortogonalnih kodnih sekvenci, u ovom slučaju Goldovog koda, 
+koje su ključne za pravilan rad CDMA metode.
+Također, prikazan je i sam algoritam CDMA metode kao i njegova implementacija u okruženju za statističko računarstvo R.
+Nakon što su svi navedeni algoritmi implementirani, izvršena je jednostavna demonstracija istih slanjem 3 neovisne tekstualne
+poruke u isto vrijeme putem idealnog kanala te njihova uspješna demodulacija, dekodiranje i čitanje od strane 3 nezavisna
+primatelja. Također, dodatno je prikazana i situacija kada korisnik pokuša pročitati poruke od kojih niti jedna nije 
+kodirana njegovim kodom. 
+Ovaj rad je kroz sve ranije spomenute korake ilustrirao jedostavnost vrlo moćne i korisne CDMA metode za dijeljenje komunikacijskog kanala te pruža njeno temeljno razumijevanje i nudi mogućnosti daljnjeg istraživanja i eksperimentiranja s ovom tehnologijom
+u komunikacijskim sustavima.
 
-## Finalni komentari i zaključak
 
