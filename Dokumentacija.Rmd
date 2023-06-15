@@ -139,6 +139,7 @@ Prednosti CDMA tehnologije su veći kapacitet mreže, smanjena interferencija i 
 ## 3. CDMA algoritam i R skripta
 
 Implementacija CDMA algoritma unutar razvojnog okruženja R zahtjeva nekoliko jednostavnih koraka:
+
 1. Generiranje n Goldovih kodova za prijenos n poruka
 2. Učitavanje zadanih poruka koje se prenose komunikacijskim kanalom.
 3. Pretvorba tih poruka u binarni oblik.
